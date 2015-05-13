@@ -1,0 +1,20 @@
+Welcome to Halo Content. 
+
+This work is part of an augmented reality project that is designed to manage text in head mounted displays. 
+
+The paper is available here:
+http://dl.acm.org/citation.cfm?id=2701375
+
+If you publish an extension of the software or use the implementation for comparison, I humbly ask that you cite the paper:
+Orlosky, J., Kiyokawa, K., Toyama, T., & Sonntag, D. (2015, March). Halo Content: Context-aware Viewspace Management for Non-invasive Augmented Reality. In Proceedings of the 20th International Conference on Intelligent User Interfaces (pp. 369-373). ACM.
+
+Instructions for use:
+1) For this particular implementation you will need JavaCV, which can be found here:
+https://github.com/bytedeco/javacv
+
+A great tutorial for installation of both JavaCV and OpenCV for Eclipse can be found here:
+http://opencvlover.blogspot.jp/2012/04/javacv-setup-with-eclipse-on-windows-7.html
+
+Just make sure the JavaCV.jar file is imported into your project. 
+
+Alternatively, you can pass a 
