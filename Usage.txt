@@ -1,7 +1,7 @@
 Welcome to Halo Content. 
 
 This work is part of an augmented reality project that is designed to manage text in head mounted displays. 
-
+ 
 The paper is available here:
 http://dl.acm.org/citation.cfm?id=2701375
 
