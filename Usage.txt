@@ -1,0 +1,51 @@
+Welcome to Halo Content. 
+
+This work is part of an augmented reality project that is designed to manage text in head mounted displays. 
+ 
+The paper is available here:
+http://dl.acm.org/citation.cfm?id=2701375
+
+If you publish an extension of the software or use the implementation for comparison, I humbly ask that you cite the paper:
+Orlosky, J., Kiyokawa, K., Toyama, T., & Sonntag, D. (2015, March). Halo Content: Context-aware Viewspace Management for Non-invasive Augmented Reality. In Proceedings of the 20th International Conference on Intelligent User Interfaces (pp. 369-373). ACM.
+
+---
+
+Instructions for use:
+1) For this particular implementation you will need JavaCV, which can be found here:
+https://github.com/bytedeco/javacv
+
+A great tutorial for installation of both JavaCV and OpenCV for Eclipse can be found here:
+http://opencvlover.blogspot.jp/2012/04/javacv-setup-with-eclipse-on-windows-7.html
+
+Just make sure the JavaCV.jar file is imported into your project. 
+
+Alternatively, you can pass a 640x480 IplImage to the haloContent(IplImage img2) method via a camera method of your choice.  Note that face detection also requires OpenCV's Haar classifier.
+
+2) Make sure the location of the .xml files included in /src is in your classpath. 
+
+3) Make sure a 640x480 USB webcam is accessable to OpenCV.
+
+4) Run HaloContent.java
+
+At this point, you should see a webcamera image with four "blocks" of content rendered onto the image. These blocks will move up and away from any faces detected in the image.
+It should look something like this: https://www.youtube.com/watch?v=9Vbs1oLpk38
+
+The up and down arrows can be used to add or remove content.  
+You are free to replace these blue blocks with your own images, icons, etc.
+The background image should be removed when the algorithm is calibrated with an optical see-through display like Google Glass (black = transparent in OST).
+
+There are three important parameters to note: 
+A) In FaceManager on line 25, "N", which is the persistence threshold in number of frames.
+Increasing this number will increase the time that content is kept away from faces.
+
+B) In HaloContent on line 304, "N", which is the distance in pixels that content will be kept away from the nearest face.
+
+C) In HaloContent on line 398, "averagingLength", which is the number of last positions of content to average. This results in a nice smoothing effect of content. 
+
+Recommended parameters are 10, 200, and 6, respectively. 
+
+---
+That should be it! 
+Feel free to message me with any questions.
+
+Jason
