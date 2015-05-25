@@ -39,8 +39,10 @@ A) In FaceManager on line 25, "N", which is the persistence threshold in number 
 Increasing this number will increase the time that content is kept away from faces.
 
 B) In HaloContent on line 304, "N", which is the distance in pixels that content will be kept away from the nearest face.
+(as of 5/25/2015, this parameter (now line 291) is now adaptive, and self-adjusts based on the user's face size. 
 
 C) In HaloContent on line 398, "averagingLength", which is the number of last positions of content to average. This results in a nice smoothing effect of content. 
+(line 394 as of 5/25/2015)
 
 Recommended parameters are 10, 200, and 6, respectively. 
 
