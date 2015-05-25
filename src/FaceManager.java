@@ -1,14 +1,7 @@
 import java.util.ArrayList;
-
 import org.bytedeco.javacpp.opencv_core.CvRect;
 import org.bytedeco.javacpp.opencv_core.CvSeq;
-import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.VideoInputFrameGrabber;
-
-import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static org.bytedeco.javacpp.opencv_core.*;
-import static org.bytedeco.javacpp.opencv_calib3d.*;
-
 
 
 public class FaceManager {
@@ -22,7 +15,7 @@ public class FaceManager {
 	 * */
 	
 	//persistance threshold
-	int N = 10;
+	int N = 5;
 
 	//Holds faces
 	ArrayList<Face> faceHolder = new ArrayList<Face>();
@@ -63,8 +56,7 @@ public class FaceManager {
 				faceHolder.add(temp);
 			}//end addition of new faces
 		}//end if
-		 
-		
+		 		
 	}//end inputFaces
 	
 	public void removeAllFaces(){
