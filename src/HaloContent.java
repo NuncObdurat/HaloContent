@@ -39,7 +39,6 @@ public class HaloContent implements Runnable{
 	//face classifier
 	CvHaarClassifierCascade faceDetector;
 
-
 	//return of the web cam image for re-display (not necessary when rendering to optical see-through)
 	BufferedImage originalImage = null;
 	
@@ -67,12 +66,6 @@ public class HaloContent implements Runnable{
 
 	//temp holder for writing images to file
 	BufferedImage tempCloneBuff = null;
-
-	//temp variables for holding positions and dimensions of detected faces
-	int rx = 0;
-	int ry = 0;
-	int rw = 0;
-	int rh = 0;
 
 	//Array positions (centers of text)
 	//TODO These are currently defined manually, but should be defined programatically
@@ -107,13 +100,14 @@ public class HaloContent implements Runnable{
 	//holds updates to the positions of each object 
 	static Object[] arrayPositions = new Object[7];
 
+	//averaging function to link face-content distance to size of detected faces 
+	InputAverager faceSizeAvg = new InputAverager();
 
 	public HaloContent(){
 		
 		//initialize detector
-		
 		//use eyes (more robust, but more false positives)
-		//		faceDetector = new CvHaarClassifierCascade(cvLoad("haarcascade_eye.xml"));
+		//faceDetector = new CvHaarClassifierCascade(cvLoad("haarcascade_eye.xml"));
 		
 		//use faces
 		faceDetector = new CvHaarClassifierCascade(cvLoad("haarcascade_frontalface_alt_tree.xml"));
@@ -122,11 +116,9 @@ public class HaloContent implements Runnable{
 		frame.setSize(640, 480);
 		frame.setVisible(true);
 		frame.getContentPane().add(imageHolder);
-		
-		
+				
 		//keylistener allowing user to add/remove content via arrow keys
 		frame.addKeyListener(new KeyListener() {
-
 
 			@Override
 			public void keyPressed(KeyEvent arg0) {
@@ -157,8 +149,6 @@ public class HaloContent implements Runnable{
 			}
 		});
 
-
-
 		//Add block layouts to an accessible array
 		arrayPositions[0] = L1;
 		arrayPositions[1] = L2;
@@ -178,7 +168,6 @@ public class HaloContent implements Runnable{
 		//initialize storage for the object detector
 		CvMemStorage storage = CvMemStorage.create();
 		CvSeq sign = cvHaarDetectObjects(src, faceDetector, storage, 1.3, 3, CV_HAAR_DO_CANNY_PRUNING);
-
 		cvClearMemStorage(storage);
 
 		//pass face array info stored in CvSeq to FaceManager here for processing (once per frame)
@@ -188,42 +177,32 @@ public class HaloContent implements Runnable{
 		//list the number of faces detected
 		total_Faces = sign.total();	
 
-		for(int i = 0; i < total_Faces; i++){
-			CvRect r = new CvRect(cvGetSeqElem(sign, i));
-			
-			//load face dimensions into faces array
-			rx = r.x();
-			ry = r.y();
-			rw = r.width();
-			rh = r.height();
-
-		}
-
 	}	
 
 	//runs the actual Halo Content movement algorithm and draws updated elements on the input image
 	public BufferedImage haloContent(IplImage img2){
+
+		//do detection
 		detect(img2);
 
 		originalImage = img2.getBufferedImage();
-		
 
+		//pull graphics for writing
 		Graphics g = originalImage.getGraphics();
-
 		Graphics2D g2d=(Graphics2D)g;
 
+		//set font/color/etc.
 		g2d.setFont(new Font( "SansSerif", Font.BOLD, 16 ));
 		g2d.setColor(Color.green);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setStroke( new BasicStroke( 5.0f ) );
-
 
 		//FaceManager working as of 9/5/2014
 		for(int i = 0; i<faces.getFaces().size();i++){
 			Face temp = (Face) faces.getFaces().get(i);
 			
 			//for debug just draw an x over all faces returned by FaceManager
-			//			g2d.drawString("X", temp.x+temp.width/2, temp.y+temp.height/2);        		
+			//g2d.drawString("X", temp.x+temp.width/2, temp.y+temp.height/2);        		
 		}
 
 		// 7 default layouts (1-7 blocks of text)
@@ -240,12 +219,14 @@ public class HaloContent implements Runnable{
 			tempLocations[2*t+1] = temp[2*t+1];
 		}
 
+		int totalMovesCountTemp = 0;
+		
 		for(int j = 0; j<faces.getFaces().size();j++){
 			Face faceForProcessing = (Face) faces.getFaces().get(j);
-
+//			sp(""+faceForProcessing.persistence);
 			for(int i = 0; i<contentBlocks; i++){
 
-				//starting coordinates of content
+				//starting coordinates of content block
 				int x1 = temp[2*i];
 				int y1 = temp[2*i+1];
 
@@ -303,10 +284,19 @@ public class HaloContent implements Runnable{
 
 				//if distance less than N pix, move text @ slope angle by N-distance pix
 				//This is effectively D_min in the paper
-				int N = 230;
-
-				int dx = x1-(rx+rw/2);
-				int dy = y1-(ry+rh/2);
+				int N = 180;
+				
+				//5/25-2015 This makes N adaptive, meaning it changes the distance based on face size
+				if(faceForProcessing.height>20){
+					N = (int)((double)(faceSizeAvg.nextD(faceForProcessing.height, 100))*1.2);
+				}
+				
+			
+				int dx = x1-(faceForProcessing.x+faceForProcessing.width/2);
+				int dy = y1-(faceForProcessing.y+faceForProcessing.height/2);
+				
+//				int dx = x1-(rx+rw/2);
+//				int dy = y1-(ry+rh/2);
 				int dTotal = 0;
 
 				if(distance<N){
@@ -342,10 +332,7 @@ public class HaloContent implements Runnable{
 					y2 = y1;
 				}
 
-				if(total_Faces==0){
-					x2 = x1;
-					y2 = y1;
-				}
+				//removed two lines from here on 5/25 to fix face manager bug
 
 				//accounts for multiple faces (takes distance to nearest face for every face) 
 				int currentDistToOrigin = (int) Math.sqrt(
@@ -357,20 +344,23 @@ public class HaloContent implements Runnable{
 					//if distance to new face greater than stored face, set new x,y values for content
 					tempLocations[2*i] = x2;
 					tempLocations[2*i+1] = y2;
+					//sp(j);
+					
 				}
 				
 				
-				//for debugging 	        					
-				
-				
+				/*
+				 * for debugging: renders notes/lines onto certain elements 	        					
+				 */
+								
 				//renderBlock(g2d, "News "+ i , tempLocations[2*i], tempLocations[2*i+1], 100, 100);
 
 				//for debug, draw origin, face center, original content center, and lines from origin to centers
 				//Origin
-				//g2d.drawString("O", originx, originy);
+//				g2d.drawString("O", originx, originy);
 				//Face centers
-//				g2d.setFont(new Font("courier", Color.green.getRGB(), 30));
-//				g2d.drawString("O", 200, 200);
+//				g2d.setFont(new Font("courier", Color.green.getRGB(), 20));
+//				g2d.drawString("O", faceCenterx, faceCentery);
 //				g2d.setFont(new Font("courier", Color.green.getRGB(), 50));
 //				
 //				g2d.drawString("O", 290, 200);
@@ -379,15 +369,21 @@ public class HaloContent implements Runnable{
 				//Original content center
 				//g2d.drawString("OrigC"+contentToOriginDistance, x1, y1);
 				//line from origin to face
-				//g2d.drawLine(originx,originy,faceCenterx,faceCentery);
+//				g2d.drawLine(originx,originy,faceCenterx,faceCentery);
 				//line from origin to content
-				//g2d.drawLine(originx,originy,x2, y2);
+//				g2d.drawLine(originx,originy,x2, y2);
 
+				/*
+				 * End debug rendering code
+				 */
+				
 			}//end increment through all content elements
 
 		}//end increment through all faces
 
 		//TODO implement application priority?
+		
+//		sp(""+totalMovesCountTemp);
 		
 		//averages last "averagingLength" positions to smooth out movement
 		for(int i = 0; i<contentBlocks; i++){
@@ -395,7 +391,7 @@ public class HaloContent implements Runnable{
 			int x = tempLocations[2*i];
 			int y = tempLocations[2*i+1];
 
-			int averagingLength = 6;
+			int averagingLength = 5;
 
 			if(i==0){
 				x = L1ax.next(tempLocations[2*i], averagingLength); 
@@ -442,7 +438,7 @@ public class HaloContent implements Runnable{
 	public void run() {
 
 		//initialize a frame grabber
-		CvCapture grabber = opencv_highgui.cvCreateCameraCapture(2);
+		CvCapture grabber = opencv_highgui.cvCreateCameraCapture(1);
 		
 		//set resolutions if necessary, current layouts are for 640x480
 //		System.out.println(opencv_highgui.cvSetCaptureProperty(grabber, opencv_highgui.CV_CAP_PROP_FRAME_WIDTH,800));
@@ -481,8 +477,8 @@ public class HaloContent implements Runnable{
 	
 
 	//a shorter way to printline
-	public static void sp(String s){
-		System.out.println(s);
+	public static void sp(Object s){
+		System.out.println(""+s);
 	}
 
 	public static void main(String[] args) {
