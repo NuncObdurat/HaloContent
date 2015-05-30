@@ -1,6 +1,8 @@
 Welcome to Halo Content. 
 
 This work is part of an augmented reality project that is designed to manage text in head mounted displays. 
+
+##This software comes with no warranty. Use at your own risk. 
  
 The paper is available here:
 http://dl.acm.org/citation.cfm?id=2701375
