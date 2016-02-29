@@ -11,6 +11,5 @@
 			this.width = width;
 			this.height = height;
 			this.persistence = persistence;
-			
 		}
 	}
